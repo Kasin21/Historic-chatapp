@@ -14,18 +14,28 @@ def index():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    data = request.get_json()
-    message = data.get("message", "")
-    character_prompt = data.get("prompt", "")
+    try:
+        data = request.get_json()
+        message = data.get("message", "")
+        character_prompt = data.get("prompt", "")
 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": character_prompt},
-            {"role": "user", "content": message}
-        ],
-        temperature=0.7
-    )
+        if not openai.api_key:
+            return jsonify({"error": "Geen API key gevonden in omgeving"}), 500
+
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": character_prompt},
+                {"role": "user", "content": message}
+            ],
+            temperature=0.7
+        )
+
+        answer = response['choices'][0]['message']['content']
+        return jsonify({"response": answer})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
     answer = response['choices'][0]['message']['content']
     return jsonify({"response": answer})
